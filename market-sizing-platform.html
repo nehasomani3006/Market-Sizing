@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Market Sizing Platform</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;padding:0;}
+button{font-family:inherit;font-size:13px;padding:6px 14px;border:0.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;color:#1a1a18;transition:all .12s;}
+button:hover{background:#f0efeb;}
+button.pri{background:#1a1a18;color:#fff;border-color:#1a1a18;}
+button.pri:hover{background:#333;}
+button.sm{padding:3px 9px;font-size:12px;}
+button.danger{color:#dc2626;border-color:#fca5a5;}
+button.danger:hover{background:#fff5f5;}
+input,select,textarea{font-family:inherit;font-size:13px;padding:6px 9px;border:0.5px solid #ccc;border-radius:6px;color:#1a1a18;background:#fff;width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.08);}
+.app{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:260px;background:#fff;border-right:0.5px solid #e0deda;display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar-header{padding:1.25rem 1rem 1rem;border-bottom:0.5px solid #eee;}
+.sidebar-title{font-size:15px;font-weight:500;margin-bottom:12px;}
+.sidebar-body{flex:1;overflow-y:auto;padding:.75rem;}
+.sidebar-section{font-size:11px;font-weight:500;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin:1rem 0 .5rem;padding:0 .25rem;}
+.proj-item{padding:.6rem .75rem;border-radius:8px;cursor:pointer;margin-bottom:4px;font-size:13px;color:#444;border:0.5px solid transparent;}
+.proj-item:hover{background:#f5f4f0;}
+.proj-item.active{background:#f0f4ff;border-color:#bfdbfe;color:#1e40af;}
+.proj-item-name{font-weight:500;font-size:13px;}
+.proj-item-meta{font-size:11px;color:#aaa;margin-top:2px;}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.topbar{background:#fff;border-bottom:0.5px solid #e0deda;padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-title{font-size:15px;font-weight:500;}
+.tab-bar{display:flex;background:#fff;border-bottom:0.5px solid #e0deda;padding:0 1.5rem;flex-shrink:0;}
+.tab{padding:.65rem 1.1rem;font-size:13px;cursor:pointer;border:none;background:transparent;color:#888;border-bottom:2px solid transparent;font-family:inherit;transition:all .12s;}
+.tab:hover{color:#1a1a18;}
+.tab.on{color:#1a1a18;border-bottom-color:#1a1a18;font-weight:500;}
+.content{flex:1;padding:1.5rem;overflow-y:auto;}
+.view{display:none;}.view.on{display:block;}
+.card{background:#fff;border:0.5px solid #e0deda;border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1rem;}
+.card-title{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.label{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.04em;}
+/* Type cards */
+.type-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;}
+.type-card{border:0.5px solid #ddd;border-radius:10px;padding:.85rem;cursor:pointer;transition:all .15s;background:#fff;}
+.type-card:hover{border-color:#93c5fd;background:#f8fbff;}
+.type-card.sel{border:2px solid #3b82f6;background:#f0f4ff;}
+.tc-icon{font-size:22px;margin-bottom:6px;}
+.tc-name{font-size:13px;font-weight:500;}
+.tc-desc{font-size:11px;color:#888;margin-top:3px;line-height:1.4;}
+.tc-badge{font-size:10px;background:#dbeafe;color:#1e40af;border-radius:4px;padding:1px 5px;margin-top:5px;display:inline-block;}
+/* Side toggle */
+.side-toggle{display:flex;border:0.5px solid #ddd;border-radius:8px;overflow:hidden;width:fit-content;}
+.side-btn{padding:7px 20px;font-size:13px;cursor:pointer;border:none;background:#fff;color:#888;font-family:inherit;transition:all .12s;}
+.side-btn:hover{background:#f5f4f0;}
+.side-btn.on{background:#1a1a18;color:#fff;}
+/* Template cards */
+.tmpl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;}
+.tmpl-card{border:0.5px solid #ddd;border-radius:10px;padding:.85rem;cursor:pointer;transition:all .15s;background:#fff;}
+.tmpl-card:hover{border-color:#93c5fd;background:#f8fbff;}
+.tmpl-card.sel{border:2px solid #3b82f6;background:#f0f4ff;}
+.tmpl-card .t-icon{font-size:18px;margin-bottom:4px;}
+.tmpl-card .t-name{font-size:12px;font-weight:500;}
+.tmpl-card .t-count{font-size:11px;color:#888;margin-top:2px;}
+/* Assumptions table */
+.a-wrap{overflow-x:auto;}
+.a-table{width:100%;border-collapse:collapse;min-width:700px;}
+.a-table th{font-size:11px;color:#888;text-align:left;padding:6px 8px;border-bottom:0.5px solid #eee;font-weight:500;white-space:nowrap;}
+.a-table td{padding:5px 6px;border-bottom:0.5px solid #f5f4f0;vertical-align:middle;}
+.a-table tr:last-child td{border-bottom:none;}
+.a-table input{padding:4px 7px;font-size:12px;}
+.a-table select{padding:4px 7px;font-size:12px;}
+.a-table textarea{padding:4px 7px;font-size:12px;height:36px;resize:none;}
+.src-tag{display:inline-block;font-size:10px;background:#f1f5f9;color:#475569;border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:middle;}
+/* Logic tree */
+.tree-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:0.5px solid #f5f4f0;font-size:13px;}
+.tree-row:last-child{border-bottom:none;}
+.tl{flex:1;color:#333;line-height:1.5;}
+.tv{font-weight:500;min-width:110px;text-align:right;color:#1a1a18;}
+.to{color:#bbb;min-width:18px;text-align:center;font-size:12px;padding-top:2px;}
+.ind1{padding-left:16px;}
+.ind2{padding-left:32px;}
+/* Results */
+.res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1rem;}
+.res-card{border-radius:10px;padding:1rem;text-align:center;}
+.res-card.main{background:#f0f4ff;border:0.5px solid #bfdbfe;}
+.res-card.bear{background:#fef2f2;border:0.5px solid #fecaca;}
+.res-card.bull{background:#f0fdf4;border:0.5px solid #bbf7d0;}
+.res-card.cross{background:#fefce8;border:0.5px solid #fde68a;}
+.res-label{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.res-val{font-size:20px;font-weight:500;color:#1a1a18;}
+.res-sub{font-size:11px;color:#aaa;margin-top:4px;}
+/* Sensitivity */
+.sens-wrap{overflow-x:auto;}
+.sens-table{width:100%;border-collapse:collapse;font-size:12px;min-width:500px;}
+.sens-table th{font-size:11px;color:#888;padding:6px 10px;text-align:left;border-bottom:0.5px solid #eee;font-weight:500;}
+.sens-table td{padding:7px 10px;border-bottom:0.5px solid #f5f4f0;}
+.sens-table tr:last-child td{border-bottom:none;}
+.dn{color:#dc2626;font-size:11px;}
+.up{color:#16a34a;font-size:11px;}
+.base-cell{color:#3b82f6;font-size:11px;}
+/* Source panel */
+.src-list{display:flex;flex-direction:column;gap:8px;}
+.src-item{display:flex;gap:10px;align-items:flex-start;padding:.75rem;background:#fafaf9;border-radius:8px;border:0.5px solid #eee;}
+.src-dot{width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-top:5px;flex-shrink:0;}
+.src-name{font-size:13px;font-weight:500;color:#1a1a18;}
+.src-ref{font-size:12px;color:#888;margin-top:2px;}
+.src-note{font-size:12px;color:#555;margin-top:2px;}
+/* Output */
+.out-box{background:#fafaf9;border:0.5px solid #eee;border-radius:8px;padding:1.25rem;font-size:12.5px;line-height:1.9;color:#333;white-space:pre-wrap;font-family:'Courier New',monospace;}
+/* Questions */
+.q-list{display:flex;flex-direction:column;gap:6px;}
+.q-item{display:flex;gap:8px;align-items:flex-start;padding:.6rem .75rem;background:#fafaf9;border-radius:8px;border-left:3px solid #3b82f6;}
+.q-num{font-size:12px;font-weight:500;color:#3b82f6;flex-shrink:0;margin-top:1px;}
+.q-text{font-size:13px;color:#333;line-height:1.5;}
+/* Hypothesis */
+.hyp-box{background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:8px;padding:1rem;font-size:13px;color:#166534;line-height:1.6;}
+/* Empty */
+.empty{text-align:center;padding:3rem;color:#aaa;font-size:13px;}
+.empty-icon{font-size:32px;margin-bottom:8px;}
+/* Misc */
+.chip{display:inline-flex;align-items:center;gap:5px;background:#f0f4ff;border:0.5px solid #bfdbfe;border-radius:20px;padding:3px 12px;font-size:12px;color:#1e40af;margin-bottom:1rem;}
+.divider{border:none;border-top:0.5px solid #eee;margin:1rem 0;}
+.info-box{background:#fefce8;border:0.5px solid #fde68a;border-radius:8px;padding:.75rem 1rem;font-size:12px;color:#854d0e;line-height:1.6;margin-bottom:1rem;}
+.variance-box{border-radius:8px;padding:1rem;font-size:13px;line-height:1.8;}
+.tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title">Market sizing</div>
+    <button class="pri" style="width:100%;" onclick="newProject()">+ New project</button>
+  </div>
+  <div class="sidebar-body">
+    <div class="sidebar-section">Projects</div>
+    <div id="proj-list"><div style="font-size:12px;color:#aaa;padding:.5rem;">No projects yet.</div></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HOME SCREEN -->
+  <div id="home-screen" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:2rem;">
+    <div style="font-size:32px;">📊</div>
+    <div style="font-size:18px;font-weight:500;">Market sizing platform</div>
+    <div style="font-size:13px;color:#888;text-align:center;max-width:320px;line-height:1.6;">Create a new project to get started. Each project has exhaustive industry templates, full demand and supply side models, sensitivity analysis, and a formatted client output.</div>
+    <button class="pri" onclick="newProject()" style="margin-top:8px;">+ New project</button>
+  </div>
+
+  <!-- PROJECT SCREEN -->
+  <div id="proj-screen" style="display:none;flex:1;display:none;flex-direction:column;overflow:hidden;">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="proj-title">—</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px;" id="proj-meta">—</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="saveProject()">Save</button>
+        <button class="pri" onclick="goTab('output')">Generate output</button>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab on" onclick="goTab('setup')">Setup</button>
+      <button class="tab" onclick="goTab('assumptions')">Assumptions</button>
+      <button class="tab" onclick="goTab('analysis')">Analysis</button>
+      <button class="tab" onclick="goTab('sources')">Sources</button>
+      <button class="tab" onclick="goTab('output')">Output</button>
+    </div>
+    <div class="content">
+
+      <!-- SETUP TAB -->
+      <div class="view on" id="v-setup">
+        <div class="card">
+          <div class="card-title">Project details</div>
+          <div class="grid2" style="margin-bottom:10px;">
+            <div class="field"><div class="label">Client / company</div><input id="s-client" placeholder="e.g. Tata Consumer Products" oninput="updateMeta()"/></div>
+            <div class="field"><div class="label">Market / product</div><input id="s-market" placeholder="e.g. Premium instant coffee" oninput="updateMeta()"/></div>
+            <div class="field"><div class="label">Geography</div><input id="s-geo" placeholder="e.g. India, Tier 1 cities" oninput="updateMeta()"/></div>
+            <div class="field"><div class="label">Year</div><input id="s-year" type="number" value="2025" min="2020" max="2035" oninput="updateMeta()"/></div>
+            <div class="field"><div class="label">Analyst</div><input id="s-analyst" placeholder="Your name" oninput="updateMeta()"/></div>
+            <div class="field"><div class="label">Currency</div>
+              <select id="s-currency" onchange="updateMeta()">
+                <option value="₹">₹ INR</option><option value="$">$ USD</option><option value="€">€ EUR</option><option value="£">£ GBP</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><div class="label">Problem statement</div><textarea id="s-problem" rows="2" placeholder="What is the client trying to decide or understand?"></textarea></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Type of market sizing</div>
+          <div class="type-grid">
+            <div class="type-card sel" onclick="selType(this,'entry')">
+              <div class="tc-icon">🌐</div><div class="tc-name">Market entry</div>
+              <div class="tc-desc">Is this market worth entering? Size the opportunity.</div>
+              <div class="tc-badge">Entry strategy</div>
+            </div>
+            <div class="type-card" onclick="selType(this,'launch')">
+              <div class="tc-icon">🚀</div><div class="tc-name">New product launch</div>
+              <div class="tc-desc">Size the addressable opportunity for a specific product.</div>
+              <div class="tc-badge">Innovation</div>
+            </div>
+            <div class="type-card" onclick="selType(this,'existing')">
+              <div class="tc-icon">📊</div><div class="tc-name">Existing market</div>
+              <div class="tc-desc">Quantify a market for a report, deck, or board presentation.</div>
+              <div class="tc-badge">Research</div>
+            </div>
+            <div class="type-card" onclick="selType(this,'benchmark')">
+              <div class="tc-icon">🎯</div><div class="tc-name">Market share</div>
+              <div class="tc-desc">Benchmark the client's share against the total market.</div>
+              <div class="tc-badge">Competitive</div>
+            </div>
+            <div class="type-card" onclick="selType(this,'expansion')">
+              <div class="tc-icon">📈</div><div class="tc-name">Market expansion</div>
+              <div class="tc-desc">Size an adjacent segment or geography for expansion.</div>
+              <div class="tc-badge">Growth</div>
+            </div>
+            <div class="type-card" onclick="selType(this,'acquisition')">
+              <div class="tc-icon">🤝</div><div class="tc-name">M&A / investment</div>
+              <div class="tc-desc">Validate the market rationale for an acquisition or investment.</div>
+              <div class="tc-badge">Corporate finance</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Approach</div>
+          <div class="side-toggle" style="margin-bottom:10px;">
+            <button class="side-btn on" id="btn-demand" onclick="selSide('demand')">Demand side</button>
+            <button class="side-btn" id="btn-supply" onclick="selSide('supply')">Supply side</button>
+            <button class="side-btn" id="btn-both" onclick="selSide('both')">Both (cross-check)</button>
+          </div>
+          <div id="side-desc" style="font-size:12px;color:#666;line-height:1.6;padding:.6rem .75rem;background:#fafaf9;border-radius:8px;"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Industry template <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;letter-spacing:0;">— loads exhaustive assumptions, sources, and key questions</span></div>
+          <div class="tmpl-grid">
+            <div class="tmpl-card sel" onclick="selTemplate(this,'fmcg')"><div class="t-icon">🛒</div><div class="t-name">FMCG / Consumer</div><div class="t-count">6 demand · 5 supply</div></div>
+            <div class="tmpl-card" onclick="selTemplate(this,'tech')"><div class="t-icon">💻</div><div class="t-name">Technology / SaaS</div><div class="t-count">5 demand · 4 supply</div></div>
+            <div class="tmpl-card" onclick="selTemplate(this,'health')"><div class="t-icon">🏥</div><div class="t-name">Healthcare</div><div class="t-count">5 demand · 5 supply</div></div>
+            <div class="tmpl-card" onclick="selTemplate(this,'finance')"><div class="t-icon">🏦</div><div class="t-name">Financial services</div><div class="t-count">5 demand · 4 supply</div></div>
+            <div class="tmpl-card" onclick="selTemplate(this,'retail')"><div class="t-icon">📦</div><div class="t-name">Retail / E-commerce</div><div class="t-count">5 demand · 4 supply</div></div>
+            <div class="tmpl-card" onclick="selTemplate(this,'infra')"><div class="t-icon">🏗️</div><div class="t-name">Infrastructure</div><div class="t-count">5 demand · 5 supply</div></div>
+            <div class="tmpl-card" onclick="selTemplate(this,'edu')"><div class="t-icon">🎓</div><div class="t-name">Education / EdTech</div><div class="t-count">5 demand · 4 supply</div></div>
+            <div class="tmpl-card" onclick="selTemplate(this,'custom')"><div class="t-icon">⚙️</div><div class="t-name">Custom / Blank</div><div class="t-count">Start from scratch</div></div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;">
+            <button class="pri" onclick="applyTemplate()">Load template →</button>
+            <span style="font-size:12px;color:#aaa;align-self:center;">All assumptions are editable after loading</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSUMPTIONS TAB -->
+      <div class="view" id="v-assumptions">
+        <div class="chip" id="a-chip">—</div>
+        <div class="info-box" id="a-info">All assumptions are fully editable. Add rows, change values, update rationale and sources inline. Changes reflect immediately in the Analysis tab.</div>
+
+        <div id="demand-block">
+          <div class="card">
+            <div class="card-title">
+              <span id="demand-label">Demand-side assumptions</span>
+              <button class="sm" onclick="addRow('demand')">+ Add assumption</button>
+            </div>
+            <div class="a-wrap">
+              <table class="a-table">
+                <thead><tr>
+                  <th style="min-width:150px;">Assumption</th>
+                  <th style="width:80px;">Value</th>
+                  <th style="width:70px;">Unit</th>
+                  <th style="min-width:150px;">Rationale</th>
+                  <th style="min-width:140px;">Source</th>
+                  <th style="width:36px;"></th>
+                </tr></thead>
+                <tbody id="demand-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="supply-block" style="display:none;">
+          <div class="card">
+            <div class="card-title">
+              <span>Supply-side assumptions</span>
+              <button class="sm" onclick="addRow('supply')">+ Add assumption</button>
+            </div>
+            <div class="a-wrap">
+              <table class="a-table">
+                <thead><tr>
+                  <th style="min-width:150px;">Assumption</th>
+                  <th style="width:80px;">Value</th>
+                  <th style="width:70px;">Unit</th>
+                  <th style="min-width:150px;">Rationale</th>
+                  <th style="min-width:140px;">Source</th>
+                  <th style="width:36px;"></th>
+                </tr></thead>
+                <tbody id="supply-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="kq-card">
+          <div class="card-title">Key questions to validate <span style="font-size:11px;color:#aaa;font-weight:400;text-transform:none;letter-spacing:0;">— from template, editable</span></div>
+          <div class="q-list" id="kq-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input id="new-kq" placeholder="Add a key question..." style="flex:1;" onkeydown="if(event.key==='Enter')addKQ()"/>
+            <button class="sm" onclick="addKQ()">Add</button>
+          </div>
+        </div>
+
+        <div class="card" id="hyp-card">
+          <div class="card-title">Working hypothesis</div>
+          <textarea id="hyp-text" rows="2" placeholder="State your hypothesis before seeing the numbers — e.g. 'The market is large enough (>₹5,000 Cr) to justify entry given...'"></textarea>
+        </div>
+      </div>
+
+      <!-- ANALYSIS TAB -->
+      <div class="view" id="v-analysis">
+        <div class="chip" id="an-chip">—</div>
+        <div class="res-grid" id="res-cards"></div>
+
+        <div id="demand-tree-card" class="card">
+          <div class="card-title">Demand-side logic tree</div>
+          <div id="demand-tree"></div>
+        </div>
+
+        <div id="supply-tree-card" class="card" style="display:none;">
+          <div class="card-title">Supply-side logic tree</div>
+          <div id="supply-tree"></div>
+        </div>
+
+        <div id="variance-card" class="card" style="display:none;">
+          <div class="card-title">Cross-check variance</div>
+          <div id="variance-box"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Sensitivity analysis <span style="font-size:11px;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;">— impact of ±20% and ±40% change on each assumption</span></div>
+          <div class="sens-wrap">
+            <table class="sens-table">
+              <thead><tr><th>Assumption</th><th>−40%</th><th>−20%</th><th>Base</th><th>+20%</th><th>+40%</th></tr></thead>
+              <tbody id="sens-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOURCES TAB -->
+      <div class="view" id="v-sources">
+        <div class="chip" id="src-chip">—</div>
+        <div class="card">
+          <div class="card-title">Recommended sources <span style="font-size:11px;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;">— from template, add your own below</span></div>
+          <div class="src-list" id="rec-sources"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Sources used in this analysis</div>
+          <div class="src-list" id="used-sources"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Add a source</div>
+          <div class="grid2" style="margin-bottom:8px;">
+            <div class="field"><div class="label">Source name</div><input id="new-src-name" placeholder="e.g. NASSCOM India Report 2024"/></div>
+            <div class="field"><div class="label">Reference / URL</div><input id="new-src-ref" placeholder="URL or publication reference"/></div>
+          </div>
+          <div class="field" style="margin-bottom:8px;"><div class="label">Note</div><input id="new-src-note" placeholder="What assumption does this support?"/></div>
+          <button class="sm" onclick="addSource()">Add source</button>
+        </div>
+      </div>
+
+      <!-- OUTPUT TAB -->
+      <div class="view" id="v-output">
+        <div class="chip" id="out-chip">—</div>
+        <div class="out-box" id="out-box"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button onclick="copyOut()">Copy output</button>
+          <button onclick="goTab('analysis')">← Back to analysis</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const TEMPLATES={
+  fmcg:{
+    label:"FMCG / Consumer goods",
+    demand:[
+      {name:"Total population",val:1400,unit:"M",note:"Urban + rural India combined",source:"Census of India 2023"},
+      {name:"Urban population %",val:37,unit:"%",note:"Urbanisation rate; rising ~1% per year",source:"World Bank 2024"},
+      {name:"Target demographic %",val:40,unit:"%",note:"Adults 18–45 in urban areas matching category profile",source:"NSSO Household Survey 2023"},
+      {name:"Category penetration %",val:35,unit:"%",note:"% of target demographic who purchase this category",source:"Nielsen India Retail Audit 2024"},
+      {name:"Purchase frequency (×/yr)",val:24,unit:"×",note:"Bi-weekly purchase cycle typical for FMCG",source:"Company primary research / retailer data"},
+      {name:"Average spend per purchase",val:250,unit:"₹",note:"Mid-tier SKU; adjust for premium or mass-market",source:"Retail shelf audit / e-commerce pricing"}
+    ],
+    supply:[
+      {name:"Retail outlets (food & bev)",val:12,unit:"M",note:"Kirana + modern trade + e-commerce",source:"FSSAI Licensed Retailers 2023"},
+      {name:"Outlets stocking category %",val:40,unit:"%",note:"Distribution reach; benchmark from category leader",source:"Nielsen Trade Audit India 2024"},
+      {name:"Units sold per outlet per month",val:30,unit:"×",note:"Average offtake; varies widely by outlet type",source:"Primary distributor interviews"},
+      {name:"Average selling price per unit",val:250,unit:"₹",note:"Retail MRP",source:"Retail shelf audit"},
+      {name:"Months per year",val:12,unit:"×",note:"Full year operation",source:"—"}
+    ],
+    questions:[
+      "What is the current category penetration in Tier 2 and Tier 3 cities — is there an untapped segment?",
+      "How does purchase frequency vary by income quintile?",
+      "What % of the market is organised vs unorganised trade?",
+      "How are pricing dynamics expected to shift over the next 3 years (premiumisation vs mass)?",
+      "What is the digital/e-commerce share of category sales and its growth trajectory?"
+    ],
+    sources:[
+      {name:"Nielsen India Retail Audit",ref:"Nielsen India, published quarterly",note:"Category penetration, distribution, offtake data"},
+      {name:"NSSO Household Consumer Expenditure Survey",ref:"Ministry of Statistics, India",note:"Income-level spending patterns"},
+      {name:"FSSAI Annual Report",ref:"fssai.gov.in",note:"Number of licensed food & beverage retailers"},
+      {name:"Euromonitor Passport",ref:"euromonitor.com (subscription)",note:"Market size benchmarks across FMCG categories"},
+      {name:"RBI Annual Report",ref:"rbi.org.in",note:"Consumer spending and inflation data"},
+      {name:"CRISIL Industry Research",ref:"crisil.com",note:"Sector-level revenue and growth estimates"}
+    ]
+  },
+  tech:{
+    label:"Technology / SaaS",
+    demand:[
+      {name:"Total businesses in India",val:63,unit:"M",note:"MSME + large enterprise",source:"MSME Ministry Annual Report 2024"},
+      {name:"Digitally active businesses %",val:30,unit:"%",note:"Have internet access + basic IT infrastructure",source:"NASSCOM India Tech Report 2024"},
+      {name:"Segment matching use case %",val:20,unit:"%",note:"Subset with the specific pain point this product solves",source:"Primary customer interviews / TAM study"},
+      {name:"Willingness to pay %",val:15,unit:"%",note:"Budget-qualified, actively evaluating solutions",source:"Sales conversion benchmark"},
+      {name:"Annual contract value",val:120000,unit:"₹",note:"Mid-market ACV; adjust for SME or enterprise",source:"Competitor pricing / sales data"}
+    ],
+    supply:[
+      {name:"Vendors in category",val:500,unit:"×",note:"Direct + adjacent competitors",source:"Tracxn India SaaS Report 2024"},
+      {name:"Avg annual revenue per vendor",val:5,unit:"M",note:"Median revenue for SME SaaS vendor",source:"Startup India filings / Tracxn"},
+      {name:"Market concentration multiplier",val:4,unit:"×",note:"Top 10 players hold ~4× the median revenue",source:"Industry estimate"},
+      {name:"Top 10 share of total market %",val:60,unit:"%",note:"Typical SaaS category concentration",source:"NASSCOM / Gartner"}
+    ],
+    questions:[
+      "What is the TAM vs SAM vs SOM — how much is realistically capturable in 3 years?",
+      "How does ACV vary across SME, mid-market, and enterprise segments?",
+      "What is the current CAC and LTV benchmark for comparable SaaS products in India?",
+      "How are global SaaS players pricing for the Indian market — are there localisation discounts?",
+      "What is the churn rate for this category and how does it affect net revenue retention?"
+    ],
+    sources:[
+      {name:"NASSCOM India Tech Report",ref:"nasscom.in, published annually",note:"SaaS market size, growth, segment breakdown"},
+      {name:"Tracxn India SaaS",ref:"tracxn.com (subscription)",note:"Vendor count, funding, revenue estimates"},
+      {name:"Gartner Magic Quadrant",ref:"gartner.com",note:"Market definition, vendor landscape"},
+      {name:"Startup India / MCA filings",ref:"startupindia.gov.in",note:"Registered company data and revenue filings"},
+      {name:"Bain India Technology Report",ref:"bain.com",note:"Enterprise software adoption trends in India"}
+    ]
+  },
+  health:{
+    label:"Healthcare",
+    demand:[
+      {name:"Total population",val:1400,unit:"M",note:"All India population",source:"Census of India 2023"},
+      {name:"Condition prevalence %",val:12,unit:"%",note:"Diagnosed + estimated undiagnosed",source:"ICMR Epidemiology Study 2023"},
+      {name:"Treatment-seeking %",val:45,unit:"%",note:"% who seek formal medical care",source:"WHO India Country Report 2023"},
+      {name:"Private healthcare use %",val:60,unit:"%",note:"% using private over public facilities",source:"National Health Profile 2023"},
+      {name:"Annual spend per patient",val:18000,unit:"₹",note:"Out-of-pocket for consultation + diagnostics + treatment",source:"NSSO Health Expenditure Survey"}
+    ],
+    supply:[
+      {name:"Private hospitals & clinics",val:70000,unit:"×",note:"Registered private facilities",source:"NHP / MoHFW 2023"},
+      {name:"Average OPD per facility per day",val:80,unit:"×",note:"Outpatient department load",source:"MoHFW facility utilisation data"},
+      {name:"Relevant condition % of OPD",val:15,unit:"%",note:"Share of total OPD attributable to this condition",source:"Clinical audit / hospital data"},
+      {name:"Average revenue per OPD visit",val:800,unit:"₹",note:"Consultation + diagnostic charges",source:"NSSO Health Survey / hospital pricing"},
+      {name:"Working days per year",val:300,unit:"×",note:"Accounting for public holidays",source:"—"}
+    ],
+    questions:[
+      "What is the diagnosis rate vs true prevalence — how large is the undiagnosed population?",
+      "How is out-of-pocket spend shifting as insurance penetration increases?",
+      "What is Ayushman Bharat's impact on the private provider market in this condition area?",
+      "Are there regional concentration effects (e.g. South India has higher private healthcare use)?",
+      "What is the growth trajectory of organised hospital chains vs standalone clinics in this segment?"
+    ],
+    sources:[
+      {name:"ICMR (Indian Council of Medical Research)",ref:"icmr.gov.in",note:"Disease prevalence, epidemiology studies"},
+      {name:"National Health Profile",ref:"cbhidghs.nic.in",note:"Facility count, utilisation, health expenditure"},
+      {name:"WHO India Country Office",ref:"who.int/india",note:"Treatment-seeking behaviour, coverage estimates"},
+      {name:"NSSO Health Survey",ref:"mospi.gov.in",note:"Household health expenditure patterns"},
+      {name:"Deloitte India Healthcare Report",ref:"deloitte.com",note:"Market sizing, growth forecasts"},
+      {name:"FICCI Healthcare Sector Report",ref:"ficci.in",note:"Private sector hospital industry data"}
+    ]
+  },
+  finance:{
+    label:"Financial services",
+    demand:[
+      {name:"Adult population (18+)",val:950,unit:"M",note:"Eligible financial services customers",source:"Census 2023 + UN population data"},
+      {name:"Banked population %",val:77,unit:"%",note:"Jan Dhan + commercial bank accounts",source:"RBI Annual Report 2024"},
+      {name:"Target income segment %",val:20,unit:"%",note:"Middle + upper income; adjust for product",source:"SECC / NFHS income data"},
+      {name:"Product adoption rate %",val:15,unit:"%",note:"Penetration of comparable financial product",source:"RBI / SEBI data + NCFE survey"},
+      {name:"Annual revenue per customer",val:8500,unit:"₹",note:"Net interest margin + fee income blended",source:"NBFC / bank quarterly disclosures"}
+    ],
+    supply:[
+      {name:"Licensed financial institutions",val:10000,unit:"×",note:"Banks + NBFCs + fintechs with relevant licence",source:"RBI registered entities list 2024"},
+      {name:"Average AUM per institution (₹ Cr)",val:500,unit:"×",note:"Median institution in this segment",source:"RBI BSR (Basic Statistical Return)"},
+      {name:"Revenue as % of AUM",val:3,unit:"%",note:"Net interest margin + fee income as % of book",source:"Industry benchmarks / RBI norms"},
+      {name:"Number of active institutions in segment",val:500,unit:"×",note:"Subset with meaningful market presence",source:"RBI supervisory data"}
+    ],
+    questions:[
+      "What is the effective market size after excluding the unserved / underserved population?",
+      "How does NIM compression from rising competition affect revenue per customer projections?",
+      "What regulatory changes (RBI / SEBI) could materially shift the addressable market?",
+      "How is UPI / fintech disruption changing customer acquisition cost and switching behaviour?",
+      "What is the credit-linked vs fee-income split, and how does that affect market sizing approach?"
+    ],
+    sources:[
+      {name:"RBI Annual Report",ref:"rbi.org.in",note:"Banking system data, credit growth, NIM benchmarks"},
+      {name:"RBI BSR (Basic Statistical Return)",ref:"rbi.org.in/publications",note:"Institution-level AUM, deposit, credit data"},
+      {name:"SEBI Annual Report",ref:"sebi.gov.in",note:"Capital markets, mutual fund, broker data"},
+      {name:"NCFE National Financial Literacy Survey",ref:"ncfe.org.in",note:"Financial inclusion and product penetration"},
+      {name:"BCG India Fintech Report",ref:"bcg.com",note:"Digital financial services market sizing"}
+    ]
+  },
+  retail:{
+    label:"Retail / E-commerce",
+    demand:[
+      {name:"Internet users in India",val:750,unit:"M",note:"Active internet users",source:"TRAI Telecom Subscription Report 2024"},
+      {name:"Online shoppers %",val:35,unit:"%",note:"Buy online ≥1× per month",source:"Bain India E-commerce Report 2024"},
+      {name:"Category shoppers %",val:25,unit:"%",note:"Purchase this specific category online",source:"Platform GMV disclosures / primary survey"},
+      {name:"Purchase frequency (×/yr)",val:8,unit:"×",note:"Based on category repurchase cycle",source:"Primary consumer survey"},
+      {name:"Average order value",val:1200,unit:"₹",note:"Including delivery; adjust for premium/mass",source:"Platform-disclosed AOV / DRHP filings"}
+    ],
+    supply:[
+      {name:"Active online sellers",val:500000,unit:"×",note:"Registered and active on major platforms",source:"Flipkart / Meesho / Amazon seller data"},
+      {name:"Average GMV per seller per month",val:50000,unit:"₹",note:"Median seller; long tail is much smaller",source:"Industry estimates / seller interviews"},
+      {name:"Platform take rate %",val:15,unit:"%",note:"Commission + fulfilment + advertising",source:"Platform DRHPs / investor presentations"},
+      {name:"Months per year",val:12,unit:"×",note:"Full year",source:"—"}
+    ],
+    questions:[
+      "What is the online vs offline split for this category and how is it shifting?",
+      "How do quick commerce / 10-minute delivery players affect market structure?",
+      "What is the returns rate for this category and how does it impact net GMV?",
+      "Is the category winner-takes-most or does it support multiple platform players?",
+      "How does advertising monetisation layer on top of GMV — what is total platform revenue?"
+    ],
+    sources:[
+      {name:"Bain India E-commerce Report",ref:"bain.com, published annually",note:"Market size, category breakdown, growth"},
+      {name:"IAMAI Digital Commerce Report",ref:"iamai.in",note:"Online shopper count and behaviour"},
+      {name:"Redseer India E-commerce",ref:"redseer.com",note:"Platform GMV, category share estimates"},
+      {name:"Platform DRHPs (Nykaa, Meesho, Zomato)",ref:"SEBI DRHP filings",note:"Disclosed GMV, take rate, AOV data"},
+      {name:"TRAI Telecom Report",ref:"trai.gov.in",note:"Internet penetration by state and demographic"}
+    ]
+  },
+  infra:{
+    label:"Infrastructure",
+    demand:[
+      {name:"Target geography population",val:500,unit:"M",note:"Population in the relevant catchment area",source:"Census / state planning commission"},
+      {name:"Infrastructure demand rate %",val:60,unit:"%",note:"% with unmet or underserved infrastructure need",source:"Ministry of Infrastructure / MoUD"},
+      {name:"Government capex per capita (₹)",val:15000,unit:"₹",note:"Budgeted public spend per person in segment",source:"Union Budget / state budget documents"},
+      {name:"Private sector share %",val:35,unit:"%",note:"Share of total capex from private players",source:"DPIIT / PPP project database"},
+      {name:"Project lifecycle (years)",val:5,unit:"×",note:"Average construction + commissioning period",source:"MoUD / NITI Aayog project data"}
+    ],
+    supply:[
+      {name:"Active infrastructure projects",val:5000,unit:"×",note:"Under construction in the relevant segment",source:"Ministry project tracker / GIS data"},
+      {name:"Average project value (₹ Cr)",val:500,unit:"×",note:"Median contract size",source:"Ministry tender database"},
+      {name:"Annual execution rate %",val:60,unit:"%",note:"% of sanctioned projects executed per year",source:"CAG audit reports"},
+      {name:"Private developer share %",val:35,unit:"%",note:"Share going to private contractors / developers",source:"DPIIT investment tracking"},
+      {name:"Revenue per project (₹ Cr)",val:50,unit:"×",note:"Developer net revenue after construction cost",source:"Industry benchmarks / listed company filings"}
+    ],
+    questions:[
+      "What is the funding gap between budgeted and actually disbursed capex?",
+      "How does execution risk (land acquisition, clearances) affect the realised market?",
+      "What is the PPP pipeline and how bankable are the projects?",
+      "How does state-level variation in execution quality affect national projections?",
+      "What is the role of DFIs (NaBFID, IIFCL) in enabling private sector participation?"
+    ],
+    sources:[
+      {name:"Union Budget Infrastructure Allocation",ref:"indiabudget.gov.in",note:"Annual capex allocation by ministry"},
+      {name:"DPIIT FDI & Investment Tracker",ref:"dpiit.gov.in",note:"Private investment flows by sector"},
+      {name:"Ministry of Road Transport / Railways project data",ref:"morth.nic.in / indianrailways.gov.in",note:"Active project pipeline and status"},
+      {name:"NITI Aayog National Infrastructure Pipeline",ref:"niti.gov.in",note:"₹111 trillion NIP project database"},
+      {name:"CAG Audit Reports",ref:"cag.gov.in",note:"Actual execution vs budgeted capex"}
+    ]
+  },
+  edu:{
+    label:"Education / EdTech",
+    demand:[
+      {name:"School-age population (5–18)",val:350,unit:"M",note:"K–12 eligible population",source:"Census 2023 + ASER Report"},
+      {name:"Enrolled in school %",val:85,unit:"%",note:"Gross enrolment ratio",source:"UDISE+ 2023–24"},
+      {name:"Private school enrolment %",val:35,unit:"%",note:"Share in private / fee-paying schools",source:"UDISE+ / ASER 2023"},
+      {name:"EdTech adoption %",val:25,unit:"%",note:"% using paid digital learning tools",source:"Redseer EdTech India 2024"},
+      {name:"Annual spend per student",val:12000,unit:"₹",note:"Subscription + content + tutoring blended",source:"Company disclosures / primary survey"}
+    ],
+    supply:[
+      {name:"EdTech platforms (active)",val:4500,unit:"×",note:"Registered + active platforms in India",source:"IVCA / Tracxn India EdTech 2024"},
+      {name:"Average MAU per platform",val:50000,unit:"×",note:"Median platform; long tail is <10K MAU",source:"App store data / company disclosures"},
+      {name:"Paid conversion rate %",val:8,unit:"%",note:"Free-to-paid conversion benchmark",source:"Industry benchmark (BYJU's, Unacademy models)"},
+      {name:"Annual revenue per paid user",val:12000,unit:"₹",note:"Subscription ARPU",source:"Company investor presentations"}
+    ],
+    questions:[
+      "What is the freemium-to-paid conversion rate and how does it differ by income segment?",
+      "How is the post-COVID EdTech correction affecting market realisation vs peak estimates?",
+      "What is the role of NEP 2020 in driving institutional procurement of EdTech?",
+      "How does regional language content requirement affect TAM and product strategy?",
+      "What is the competitive dynamic between domestic players and global entrants (Coursera, Duolingo)?"
+    ],
+    sources:[
+      {name:"ASER Report (Annual Status of Education)",ref:"asercentre.org",note:"Learning outcomes, enrolment, private school data"},
+      {name:"UDISE+ (Unified District Information System)",ref:"udiseplus.gov.in",note:"School enrolment, infrastructure, teacher data"},
+      {name:"Redseer EdTech India Report",ref:"redseer.com",note:"Market size, category breakdown, platform ranking"},
+      {name:"IVCA India EdTech Tracker",ref:"ivca.in",note:"Funding, company count, growth metrics"},
+      {name:"NEP 2020 / Ministry of Education",ref:"education.gov.in",note:"Policy framework affecting EdTech demand"}
+    ]
+  },
+  custom:{
+    label:"Custom",
+    demand:[
+      {name:"Total addressable base",val:100,unit:"M",note:"Define your starting universe",source:"—"},
+      {name:"Relevant segment %",val:30,unit:"%",note:"Who is the target?",source:"—"},
+      {name:"Adoption / penetration %",val:20,unit:"%",note:"How many will buy?",source:"—"},
+      {name:"Frequency (×/yr)",val:12,unit:"×",note:"How often?",source:"—"},
+      {name:"Revenue per unit",val:5000,unit:"₹",note:"Price point",source:"—"}
+    ],
+    supply:[
+      {name:"Total suppliers / outlets",val:10000,unit:"×",note:"Supply-side base",source:"—"},
+      {name:"Output per supplier per period",val:500,unit:"×",note:"Units or transactions",source:"—"},
+      {name:"Average revenue per unit",val:5000,unit:"₹",note:"Selling price",source:"—"}
+    ],
+    questions:["Define the primary customer segment","What is the key value driver for this market?","What are the top 3 assumptions to validate with primary research?"],
+    sources:[{name:"Add your sources here",ref:"—",note:"Click 'Sources' tab to manage"}]
+  }
+};
+
+let state={
+  type:"entry",side:"demand",template:"fmcg",
+  client:"",market:"",geo:"",year:2025,analyst:"",currency:"₹",problem:"",
+  demand:[],supply:[],
+  questions:[],hypothesis:"",
+  addedSources:[]
+};
+let projects=[];
+let activeIdx=null;
+
+const sideDescs={
+  demand:"Start from the customer — who they are, how many exist, how often they buy, and at what price. Best when consumer data is available.",
+  supply:"Start from the seller — how many providers exist, what each sells, and at what price. Best when distribution data is available.",
+  both:"Run both approaches independently and cross-check. Variance under 20% = high confidence. Variance over 40% = revisit assumptions."
+};
+const typeLabels={entry:"Market entry",launch:"New product launch",existing:"Existing market sizing",benchmark:"Market share benchmark",expansion:"Market expansion",acquisition:"M&A / investment rationale"};
+
+function goTab(t){
+  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("on"));
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  const tabs=["setup","assumptions","analysis","sources","output"];
+  const idx=tabs.indexOf(t);
+  document.querySelectorAll(".tab")[idx].classList.add("on");
+  document.getElementById("v-"+t).classList.add("on");
+  if(t==="analysis")renderAnalysis();
+  if(t==="sources")renderSources();
+  if(t==="output")renderOutput();
+  if(t==="assumptions")renderChip("a-chip");
+}
+
+function selType(el,type){
+  document.querySelectorAll(".type-card").forEach(c=>c.classList.remove("sel"));
+  el.classList.add("sel");state.type=type;
+}
+
+function selSide(s){
+  state.side=s;
+  ["demand","supply","both"].forEach(x=>document.getElementById("btn-"+x).classList.remove("on"));
+  document.getElementById("btn-"+s).classList.add("on");
+  document.getElementById("side-desc").textContent=sideDescs[s];
+  const showD=s==="demand"||s==="both";
+  const showS=s==="supply"||s==="both";
+  if(document.getElementById("demand-block"))document.getElementById("demand-block").style.display=showD?"block":"none";
+  if(document.getElementById("supply-block"))document.getElementById("supply-block").style.display=showS?"block":"none";
+}
+document.getElementById("side-desc").textContent=sideDescs.demand;
+
+function selTemplate(el,key){
+  document.querySelectorAll(".tmpl-card").forEach(c=>c.classList.remove("sel"));
+  el.classList.add("sel");state.template=key;
+}
+
+function applyTemplate(){
+  const t=TEMPLATES[state.template]||TEMPLATES.custom;
+  state.demand=[...t.demand.map(r=>({...r}))];
+  state.supply=[...t.supply.map(r=>({...r}))];
+  state.questions=[...t.questions];
+  state.addedSources=[];
+  selSide(state.side);
+  renderTable("demand");renderTable("supply");
+  renderKQ();
+  goTab("assumptions");
+}
+
+function updateMeta(){
+  state.client=document.getElementById("s-client").value;
+  state.market=document.getElementById("s-market").value;
+  state.geo=document.getElementById("s-geo").value;
+  state.year=document.getElementById("s-year").value;
+  state.analyst=document.getElementById("s-analyst").value;
+  state.currency=document.getElementById("s-currency").value;
+  state.problem=document.getElementById("s-problem").value;
+  const t=document.getElementById("proj-title");
+  const m=document.getElementById("proj-meta");
+  if(t)t.textContent=(state.client||"New project")+(state.market?" — "+state.market:"");
+  if(m)m.textContent=[state.geo,state.year,typeLabels[state.type]].filter(Boolean).join(" · ");
+}
+
+function renderChip(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=[(state.client||"Client"),(state.market||"Market"),(state.geo||""),(state.year||2025),typeLabels[state.type]].filter(Boolean).join(" · ");
+}
+
+function getRows(side){
+  const rows=[];
+  document.querySelectorAll(`#${side}-body tr`).forEach(tr=>{
+    rows.push({
+      name:tr.querySelector(".a-name")?.value||"",
+      val:parseFloat(tr.querySelector(".a-val")?.value)||0,
+      unit:tr.querySelector(".a-unit")?.value||"×",
+      note:tr.querySelector(".a-note")?.value||"",
+      source:tr.querySelector(".a-source")?.value||""
+    });
+  });
+  return rows;
+}
+
+function makeRow(side,i,r){
+  const units=["M","K","×","%","₹","$","€","£","units","Cr"];
+  return`<tr>
+    <td><input class="a-name" value="${esc(r.name)}" placeholder="Assumption name" onchange=""/></td>
+    <td><input class="a-val" type="number" value="${r.val}" step="any"/></td>
+    <td><select class="a-unit">${units.map(u=>`<option${r.unit===u?" selected":""}>${u}</option>`).join("")}</select></td>
+    <td><input class="a-note" value="${esc(r.note)}" placeholder="Rationale..."/></td>
+    <td><input class="a-source" value="${esc(r.source)}" placeholder="Source..."/></td>
+    <td><button class="sm danger" onclick="removeRow('${side}',this)">✕</button></td>
+  </tr>`;
+}
+
+function esc(s){return(s||"").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
+
+function renderTable(side){
+  const body=document.getElementById(side+"-body");
+  if(!body)return;
+  body.innerHTML=state[side].map((r,i)=>makeRow(side,i,r)).join("");
+}
+
+function addRow(side){
+  const tbody=document.getElementById(side+"-body");
+  const i=tbody.rows.length;
+  const r={name:"New assumption",val:100,unit:"%",note:"",source:""};
+  const tr=document.createElement("tr");
+  tr.innerHTML=makeRow(side,i,r).replace(/<tr>/,"").replace(/<\/tr>/,"");
+  tbody.appendChild(tr);
+}
+
+function removeRow(side,btn){btn.closest("tr").remove();}
+
+function renderKQ(){
+  const list=document.getElementById("kq-list");
+  list.innerHTML=state.questions.map((q,i)=>
+    `<div class="q-item">
+      <div class="q-num">Q${i+1}</div>
+      <div style="flex:1;"><input value="${esc(q)}" style="width:100%;font-size:13px;border:none;background:transparent;padding:0;color:#333;" onchange="state.questions[${i}]=this.value"/></div>
+      <button class="sm danger" onclick="state.questions.splice(${i},1);renderKQ()">✕</button>
+    </div>`
+  ).join("");
+}
+
+function addKQ(){
+  const inp=document.getElementById("new-kq");
+  const val=inp.value.trim();if(!val)return;
+  state.questions.push(val);renderKQ();inp.value="";
+}
+
+function calcSize(rows){
+  if(!rows||!rows.length)return 0;
+  let r=rows[0].val;
+  if(rows[0].unit==="M")r*=1e6;
+  else if(rows[0].unit==="K")r*=1e3;
+  else if(rows[0].unit==="Cr")r*=1e7;
+  for(let i=1;i<rows.length;i++){
+    const a=rows[i];
+    if(a.unit==="%")r*=a.val/100;
+    else if(a.unit==="M")r*=a.val*1e6;
+    else if(a.unit==="K")r*=a.val*1e3;
+    else if(a.unit==="Cr")r*=a.val*1e7;
+    else r*=a.val;
+  }
+  return r;
+}
+
+function fmtM(n,cur){
+  cur=cur||state.currency||"₹";
+  if(!n&&n!==0)return"—";
+  const a=Math.abs(n);
+  if(a>=1e12)return cur+(n/1e12).toFixed(2)+"T";
+  if(a>=1e9)return cur+(n/1e9).toFixed(1)+"B";
+  if(a>=1e7)return cur+(n/1e7).toFixed(1)+" Cr";
+  if(a>=1e6)return cur+(n/1e6).toFixed(1)+"M";
+  if(a>=1e3)return cur+(n/1e3).toFixed(1)+"K";
+  return cur+Math.round(n).toLocaleString();
+}
+
+function fmtN(n,unit){
+  if(unit==="%")return Math.round(n)+"%";
+  if(unit==="₹"||unit==="$"||unit==="€"||unit==="£")return fmtM(n);
+  const a=Math.abs(n);
+  if(a>=1e9)return(n/1e9).toFixed(1)+"B";
+  if(a>=1e7)return(n/1e7).toFixed(1)+" Cr";
+  if(a>=1e6)return(n/1e6).toFixed(1)+"M";
+  if(a>=1e3)return(n/1e3).toFixed(1)+"K";
+  return Math.round(n)+" "+(unit||"");
+}
+
+function buildTreeHTML(rows){
+  if(!rows.length)return`<div style="color:#aaa;font-size:13px;">No assumptions added yet.</div>`;
+  let running=rows[0].val;
+  if(rows[0].unit==="M")running*=1e6;
+  else if(rows[0].unit==="K")running*=1e3;
+  else if(rows[0].unit==="Cr")running*=1e7;
+  let html=`<div class="tree-row"><span class="tl"><strong>${rows[0].name}</strong>${rows[0].source?`<span class="src-tag">${rows[0].source}</span>`:""}</span><span class="to"></span><span class="tv">${fmtN(rows[0].val,rows[0].unit)}</span></div>`;
+  for(let i=1;i<rows.length;i++){
+    const a=rows[i];
+    if(a.unit==="%")running*=a.val/100;
+    else if(a.unit==="M")running*=a.val*1e6;
+    else if(a.unit==="K")running*=a.val*1e3;
+    else if(a.unit==="Cr")running*=a.val*1e7;
+    else running*=a.val;
+    html+=`<div class="tree-row ind1"><span class="tl">× ${a.name} (${a.val}${a.unit})${a.source?`<span class="src-tag">${a.source}</span>`:""}</span><span class="to">→</span><span class="tv">${fmtM(running)}</span></div>`;
+  }
+  return html;
+}
+
+function calcSizeModified(rows,idx,delta){
+  const modified=rows.map((r,i)=>i===idx?{...r,val:r.val*(1+delta/100)}:{...r});
+  return calcSize(modified);
+}
+
+function renderAnalysis(){
+  renderChip("an-chip");
+  const dRows=getRows("demand");
+  const sRows=getRows("supply");
+  const showD=state.side==="demand"||state.side==="both";
+  const showS=state.side==="supply"||state.side==="both";
+  const dSize=calcSize(dRows);
+  const sSize=calcSize(sRows);
+  const mainSize=showD?dSize:sSize;
+  const bear=mainSize*0.6,bull=mainSize*1.4;
+
+  let cardsHTML=`
+    <div class="res-card main"><div class="res-label">Market size</div><div class="res-val">${fmtM(mainSize)}</div><div class="res-sub">Base case</div></div>
+    <div class="res-card bear"><div class="res-label">Bear case −40%</div><div class="res-val">${fmtM(bear)}</div><div class="res-sub">Conservative</div></div>
+    <div class="res-card bull"><div class="res-label">Bull case +40%</div><div class="res-val">${fmtM(bull)}</div><div class="res-sub">Optimistic</div></div>`;
+  if(state.side==="both")cardsHTML+=`<div class="res-card cross"><div class="res-label">Supply cross-check</div><div class="res-val">${fmtM(sSize)}</div><div class="res-sub">Independent estimate</div></div>`;
+  document.getElementById("res-cards").innerHTML=cardsHTML;
+
+  document.getElementById("demand-tree-card").style.display=showD?"block":"none";
+  document.getElementById("supply-tree-card").style.display=showS?"block":"none";
+  if(showD)document.getElementById("demand-tree").innerHTML=buildTreeHTML(dRows);
+  if(showS)document.getElementById("supply-tree").innerHTML=buildTreeHTML(sRows);
+
+  const vCard=document.getElementById("variance-card");
+  if(state.side==="both"&&dSize&&sSize){
+    vCard.style.display="block";
+    const v=Math.abs(dSize-sSize)/Math.max(dSize,sSize)*100;
+    const col=v<20?"#16a34a":v<40?"#854d0e":"#dc2626";
+    const bg=v<20?"#f0fdf4":v<40?"#fefce8":"#fef2f2";
+    const msg=v<20?"✅ Strong alignment — high confidence in the estimate.":v<40?"⚠️ Moderate variance — revisit the assumption driving the gap.":"❌ High variance — primary research needed to reconcile.";
+    document.getElementById("variance-box").innerHTML=`<div class="variance-box" style="background:${bg};border:0.5px solid ${col}40;">Demand-side: <strong>${fmtM(dSize)}</strong> &nbsp;·&nbsp; Supply-side: <strong>${fmtM(sSize)}</strong> &nbsp;·&nbsp; Variance: <strong style="color:${col}">${Math.round(v)}%</strong><br><br>${msg}</div>`;
+  }else{vCard.style.display="none";}
+
+  const mainRows=showD?dRows:sRows;
+  document.getElementById("sens-body").innerHTML=mainRows.map((a,i)=>{
+    const deltas=[-40,-20,0,20,40];
+    const sizes=deltas.map(d=>calcSizeModified(mainRows,i,d));
+    const base=sizes[2];
+    return`<tr>
+      <td><strong>${a.name}</strong>${a.source?`<br><span style="font-size:10px;color:#aaa;">${a.source}</span>`:""}</td>
+      ${sizes.map((v,j)=>{
+        const pct=j===2?"":(((v-base)/base)*100).toFixed(1);
+        const cl=j<2?"dn":j>2?"up":"base-cell";
+        return`<td>${fmtM(v)}${j!==2?`<br><span class="${cl}">${j<2?"":"+"}${pct}%</span>`:`<br><span class="base-cell">base</span>`}</td>`;
+      }).join("")}
+    </tr>`;
+  }).join("");
+}
+
+function renderSources(){
+  renderChip("src-chip");
+  const tmpl=TEMPLATES[state.template]||TEMPLATES.custom;
+  document.getElementById("rec-sources").innerHTML=(tmpl.sources||[]).map(s=>
+    `<div class="src-item"><div class="src-dot"></div><div><div class="src-name">${s.name}</div><div class="src-ref">${s.ref}</div><div class="src-note">${s.note}</div></div></div>`
+  ).join("")||`<div style="color:#aaa;font-size:13px;">No recommended sources for this template.</div>`;
+
+  const allSources=[...getRows("demand"),...getRows("supply")].filter(r=>r.source&&r.source!=="—").map(r=>({name:r.source,note:r.name}));
+  const combined=[...allSources,...state.addedSources];
+  document.getElementById("used-sources").innerHTML=combined.length?combined.map(s=>
+    `<div class="src-item"><div class="src-dot" style="background:#16a34a;"></div><div><div class="src-name">${s.name}</div>${s.ref?`<div class="src-ref">${s.ref}</div>`:""}<div class="src-note">${s.note||""}</div></div></div>`
+  ).join(""):`<div style="color:#aaa;font-size:13px;">Sources will appear here as you fill in assumptions.</div>`;
+}
+
+function addSource(){
+  const name=document.getElementById("new-src-name").value.trim();
+  const ref=document.getElementById("new-src-ref").value.trim();
+  const note=document.getElementById("new-src-note").value.trim();
+  if(!name)return;
+  state.addedSources.push({name,ref,note});
+  document.getElementById("new-src-name").value="";
+  document.getElementById("new-src-ref").value="";
+  document.getElementById("new-src-note").value="";
+  renderSources();
+}
+
+function renderOutput(){
+  renderChip("out-chip");
+  const dRows=getRows("demand");
+  const sRows=getRows("supply");
+  const showD=state.side==="demand"||state.side==="both";
+  const showS=state.side==="supply"||state.side==="both";
+  const dSize=calcSize(dRows);
+  const sSize=calcSize(sRows);
+  const mainSize=showD?dSize:sSize;
+  const cur=state.currency||"₹";
+  const fmtRows=rows=>rows.map((a,i)=>`  ${i===0?"Base:":"   ×"} ${a.name}: ${a.val}${a.unit}${a.source?" ["+a.source+"]":""}${a.note?" — "+a.note:""}`).join("\n");
+  const tmpl=TEMPLATES[state.template]||TEMPLATES.custom;
+  const allSrc=[...dRows,...sRows].filter(r=>r.source&&r.source!=="—").map(r=>`• ${r.name}: ${r.source}`);
+  const addedSrc=state.addedSources.map(s=>`• ${s.name}${s.ref?" ("+s.ref+")":""}${s.note?" — "+s.note:""}`);
+  const srcSection=[...new Set([...allSrc,...addedSrc])].join("\n")||"  No sources specified.";
+  const qSection=(state.questions||[]).map((q,i)=>`  ${i+1}. ${q}`).join("\n")||"  None specified.";
+  const hyp=document.getElementById("hyp-text")?.value||state.hypothesis||"Not specified.";
+
+  const out=`MARKET SIZING ANALYSIS
+${"═".repeat(56)}
+Client:         ${state.client||"—"}
+Market:         ${state.market||"—"}
+Geography:      ${state.geo||"—"}
+Year:           ${state.year||2025}
+Analyst:        ${state.analyst||"—"}
+Study type:     ${typeLabels[state.type]||state.type}
+Approach:       ${state.side==="both"?"Demand-side + Supply-side cross-check":state.side==="demand"?"Demand-side":"Supply-side"}
+Industry:       ${tmpl.label||"Custom"}
+
+${"─".repeat(56)}
+PROBLEM STATEMENT
+${"─".repeat(56)}
+${state.problem||"Not specified."}
+
+${"─".repeat(56)}
+WORKING HYPOTHESIS
+${"─".repeat(56)}
+${hyp}
+
+${"─".repeat(56)}
+KEY FINDINGS
+${"─".repeat(56)}
+Market size (base):   ${fmtM(mainSize)}
+Bear case (−40%):     ${fmtM(mainSize*0.6)}
+Bull case (+40%):     ${fmtM(mainSize*1.4)}
+${state.side==="both"?`
+Demand-side:          ${fmtM(dSize)}
+Supply-side:          ${fmtM(sSize)}
+Variance:             ${Math.round(Math.abs(dSize-sSize)/Math.max(dSize||1,sSize||1)*100)}%`:""}
+
+${"─".repeat(56)}
+${showD?`DEMAND-SIDE ASSUMPTIONS\n${"─".repeat(56)}\n${fmtRows(dRows)}\n  → Demand-side estimate: ${fmtM(dSize)}\n\n`:""}${showS?`SUPPLY-SIDE ASSUMPTIONS\n${"─".repeat(56)}\n${fmtRows(sRows)}\n  → Supply-side estimate: ${fmtM(sSize)}\n\n`:""}${"─".repeat(56)}
+KEY QUESTIONS TO VALIDATE
+${"─".repeat(56)}
+${qSection}
+
+${"─".repeat(56)}
+SOURCES
+${"─".repeat(56)}
+${srcSection}
+
+${"─".repeat(56)}
+STRATEGIC FRAMING
+${"─".repeat(56)}
+The ${state.market||"target market"} in ${state.geo||"the region"} represents a ${fmtM(mainSize)} opportunity in ${state.year||2025}.
+
+${mainSize>1e11?"This is a structurally large market. The strategic question is not whether to participate but how to sequence entry and where to play to win.":mainSize>1e9?"This is a mid-sized, selective opportunity. Viability depends on competitive positioning, margin structure, and the ability to capture meaningful share rapidly.":"This is a niche or early-stage market. Entry rationale must rest on premium pricing power, low CAC, or a beachhead strategy for a larger platform play."}
+
+Priority next steps:
+  1. Validate the top 2–3 assumptions with primary research or published data
+  2. Overlay competitive landscape to determine realistic capturable share
+  3. Build a bottom-up revenue model for the client's specific entry strategy
+  4. Stress-test the bear case — does the investment thesis hold at ${fmtM(mainSize*0.6)}?
+
+${"═".repeat(56)}
+Generated: ${new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}`;
+
+  document.getElementById("out-box").textContent=out;
+}
+
+function copyOut(){
+  navigator.clipboard.writeText(document.getElementById("out-box").textContent).then(()=>{
+    const b=event.target;b.textContent="Copied!";setTimeout(()=>{b.textContent="Copy output";},2000);
+  });
+}
+
+function newProject(){
+  activeIdx=null;
+  state={type:"entry",side:"demand",template:"fmcg",client:"",market:"",geo:"",year:2025,analyst:"",currency:"₹",problem:"",demand:[],supply:[],questions:[],hypothesis:"",addedSources:[]};
+  document.getElementById("s-client").value="";
+  document.getElementById("s-market").value="";
+  document.getElementById("s-geo").value="";
+  document.getElementById("s-year").value=2025;
+  document.getElementById("s-analyst").value="";
+  document.getElementById("s-currency").value="₹";
+  document.getElementById("s-problem").value="";
+  document.getElementById("hyp-text").value="";
+  document.querySelectorAll(".type-card").forEach((c,i)=>c.classList.toggle("sel",i===0));
+  document.querySelectorAll(".tmpl-card").forEach((c,i)=>c.classList.toggle("sel",i===0));
+  selSide("demand");
+  renderTable("demand");renderTable("supply");renderKQ();
+  document.getElementById("home-screen").style.display="none";
+  document.getElementById("proj-screen").style.display="flex";
+  document.getElementById("proj-title").textContent="New project";
+  document.getElementById("proj-meta").textContent="Set up your project details";
+  goTab("setup");
+}
+
+function saveProject(){
+  state.client=document.getElementById("s-client").value;
+  state.market=document.getElementById("s-market").value;
+  state.geo=document.getElementById("s-geo").value;
+  state.year=document.getElementById("s-year").value;
+  state.analyst=document.getElementById("s-analyst").value;
+  state.currency=document.getElementById("s-currency").value;
+  state.problem=document.getElementById("s-problem").value;
+  state.hypothesis=document.getElementById("hyp-text").value;
+  state.demand=getRows("demand");
+  state.supply=getRows("supply");
+  const snap={...state,demand:[...state.demand],supply:[...state.supply],questions:[...state.questions],addedSources:[...state.addedSources]};
+  if(activeIdx!==null){projects[activeIdx]=snap;}
+  else{projects.push(snap);activeIdx=projects.length-1;}
+  renderProjList();
+  const btn=event.target;btn.textContent="Saved ✓";setTimeout(()=>{btn.textContent="Save";},2000);
+}
+
+function renderProjList(){
+  const list=document.getElementById("proj-list");
+  if(!projects.length){list.innerHTML='<div style="font-size:12px;color:#aaa;padding:.5rem;">No projects yet.</div>';return;}
+  list.innerHTML=projects.map((p,i)=>
+    `<div class="proj-item${activeIdx===i?" active":""}" onclick="openProject(${i})">
+      <div class="proj-item-name">${p.client||"Client"}${p.market?" — "+p.market:""}</div>
+      <div class="proj-item-meta">${[p.geo,p.year,typeLabels[p.type]].filter(Boolean).join(" · ")}</div>
+    </div>`
+  ).join("");
+}
+
+function openProject(i){
+  activeIdx=i;
+  const p=projects[i];
+  Object.assign(state,{...p,demand:[...p.demand],supply:[...p.supply],questions:[...p.questions],addedSources:[...(p.addedSources||[])]});
+  document.getElementById("s-client").value=p.client||"";
+  document.getElementById("s-market").value=p.market||"";
+  document.getElementById("s-geo").value=p.geo||"";
+  document.getElementById("s-year").value=p.year||2025;
+  document.getElementById("s-analyst").value=p.analyst||"";
+  document.getElementById("s-currency").value=p.currency||"₹";
+  document.getElementById("s-problem").value=p.problem||"";
+  document.getElementById("hyp-text").value=p.hypothesis||"";
+  document.querySelectorAll(".type-card").forEach(c=>c.classList.remove("sel"));
+  document.querySelectorAll(".tmpl-card").forEach(c=>c.classList.remove("sel"));
+  const types=["entry","launch","existing","benchmark","expansion","acquisition"];
+  const tmpls=["fmcg","tech","health","finance","retail","infra","edu","custom"];
+  const ti=types.indexOf(p.type);if(ti>=0)document.querySelectorAll(".type-card")[ti].classList.add("sel");
+  const tmpi=tmpls.indexOf(p.template);if(tmpi>=0)document.querySelectorAll(".tmpl-card")[tmpi].classList.add("sel");
+  selSide(p.side||"demand");
+  renderTable("demand");renderTable("supply");renderKQ();
+  document.getElementById("home-screen").style.display="none";
+  document.getElementById("proj-screen").style.display="flex";
+  document.getElementById("proj-title").textContent=(p.client||"Client")+(p.market?" — "+p.market:"");
+  document.getElementById("proj-meta").textContent=[p.geo,p.year,typeLabels[p.type]].filter(Boolean).join(" · ");
+  renderProjList();
+  goTab("setup");
+}
+</script>
+</body>
+</html>
